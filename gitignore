@@ -1,0 +1,5 @@
+.env
+eco_guard.db
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
