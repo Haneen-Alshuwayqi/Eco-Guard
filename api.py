@@ -1,8 +1,9 @@
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from agents import run_demographic_agent, run_financial_agent, run_manager_agent
 
-app = FastAPI(title="Eco-Guard API", description="Ù†Ø¸Ø§Ù… Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø³ÙˆØ­Ø§Øª Ø§Ù„Ø£Ø³Ø±ÙŠØ©")
+app = FastAPI(title="Eco-Guard API", description="äÙÇã ÇáÊÍÞÞ ãä ÈíÇäÇÊ ÇáãÓæÍÇÊ ÇáÃÓÑíÉ")
 
 class SurveyRecord(BaseModel):
     age: int
@@ -22,28 +23,26 @@ def health():
 
 @app.post("/agent/demographic")
 def demographic(record: SurveyRecord):
-    result = run_demographic_agent(record.dict())
-    return result
+    return run_demographic_agent(record.dict())
 
 @app.post("/agent/financial")
 def financial(record: SurveyRecord):
-    result = run_financial_agent(record.dict())
-    return result
+    return run_financial_agent(record.dict())
 
 @app.post("/agent/manager")
 def manager(record: SurveyRecord):
     demo = run_demographic_agent(record.dict())
-    financial = run_financial_agent(record.dict())
-    result = run_manager_agent(demo, financial, record.dict())
-    return result
+    fin = run_financial_agent(record.dict())
+    return run_manager_agent(demo, fin, record.dict())
 
 @app.post("/analyze")
 def analyze(record: SurveyRecord):
     demo = run_demographic_agent(record.dict())
-    financial = run_financial_agent(record.dict())
-    manager = run_manager_agent(demo, financial, record.dict())
-    return {
-        "demographic": demo,
-        "financial": financial,
-        "manager": manager
-    }
+    fin = run_financial_agent(record.dict())
+    mgr = run_manager_agent(demo, fin, record.dict())
+    return {"demographic": demo, "financial": fin, "manager": mgr}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
