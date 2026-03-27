@@ -1,14 +1,13 @@
 import os
 import json
-import anthropic
 from dotenv import load_dotenv
 
 load_dotenv()
 
-api_key = os.environ.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-client = anthropic.Anthropic(api_key=api_key)
-
 def call_llm(prompt: str) -> str:
+    import anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    client = anthropic.Anthropic(api_key=api_key)
     try:
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
