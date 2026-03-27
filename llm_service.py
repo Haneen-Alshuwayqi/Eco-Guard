@@ -3,7 +3,9 @@ import anthropic
 from dotenv import load_dotenv
 
 load_dotenv()
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+api_key = os.environ.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+client = anthropic.Anthropic(api_key=api_key)
 
 def call_llm(prompt: str) -> str:
     try:
@@ -15,4 +17,4 @@ def call_llm(prompt: str) -> str:
         )
         return response.content[0].text
     except Exception as e:
-        return f'{{"status": "Ø®Ø·Ø£", "score": 0, "issues": ["Ø®Ø·Ø£: {str(e)}"], "notes": "ÙØ´Ù„ Ø§Ù„Ø§ØªØµØ§Ù„"}}'
+        return f\'{{"status": "ÎØÃ", "score": 0, "issues": ["ÎØÃ: {str(e)}"], "notes": "İÔá ÇáÇÊÕÇá"}}\'
