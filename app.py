@@ -4,7 +4,7 @@ import time
 import base64
 import os
 import plotly.graph_objects as go
-from agents import analyze_record, analyze_batch
+from api_client import call_demographic_agent, call_financial_agent, call_manager_agent
 from utils import record_to_dict, get_trust_color, get_status_emoji, format_issues, csv_to_records, export_to_excel
 
 st.set_page_config(
@@ -13,8 +13,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -443,29 +441,25 @@ if "يدوي" in mode:
                 st.markdown('<div class="step-indicator">جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...</div>', unsafe_allow_html=True)
             progress_bar.progress(20)
 
-            from agents import run_demographic_agent
-            demo_result = run_demographic_agent(record)
+            demo_result = call_demographic_agent(record)
             progress_bar.progress(40)
             time.sleep(0.8)
 
             with status_container.container():
                 st.markdown('<div class="step-indicator">جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...</div>', unsafe_allow_html=True)
 
-            from agents import run_financial_agent
-            financial_result = run_financial_agent(record)
+            financial_result = call_financial_agent(record)
             progress_bar.progress(70)
             time.sleep(0.8)
 
             with status_container.container():
                 st.markdown('<div class="step-indicator">جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
 
-            from agents import run_manager_agent
-            manager_result = run_manager_agent(demo_result, financial_result, record)
+            manager_result = call_manager_agent(record)
             progress_bar.progress(100)
             time.sleep(0.5)
             status_container.empty()
 
-            # ===== تسجيل العملية في Audit Log =====
             log_analysis(st.session_state.current_user, "manual", 1)
 
             st.success("اكتملت عملية التحليل بنجاح")
@@ -560,7 +554,6 @@ if "يدوي" in mode:
                 """, unsafe_allow_html=True)
                 st.markdown(f'<div class="recommendation-box">{manager_result.get("recommendation", "")}</div>', unsafe_allow_html=True)
 
-            # ===== CHARTS =====
             st.markdown('<p class="agents-title">التحليل البياني</p>', unsafe_allow_html=True)
 
             col_gauge, col_bar = st.columns(2, gap="large")
@@ -646,19 +639,16 @@ elif "CSV" in mode:
                 progress_bar = st.progress(0)
                 results = []
                 for i, record in enumerate(records):
-                    from agents import run_demographic_agent, run_financial_agent, run_manager_agent
-                    demo = run_demographic_agent(record)
-                    financial = run_financial_agent(record)
-                    manager = run_manager_agent(demo, financial, record)
+                    demo = call_demographic_agent(record)
+                    financial = call_financial_agent(record)
+                    manager = call_manager_agent(record)
                     results.append({'record_index': i+1, 'original_record': record, 'demographic': demo, 'financial': financial, 'manager': manager})
                     progress_bar.progress((i+1) / len(records))
 
-                # ===== تسجيل العملية في Audit Log =====
                 log_analysis(st.session_state.current_user, "batch", len(records))
 
                 st.success(f"اكتمل تحليل {len(results)} سجل بنجاح")
 
-                # ===== إحصائيات عامة =====
                 total = len(results)
                 trusted = sum(1 for r in results if r['manager'].get('trust_score', 0) >= 75)
                 review = sum(1 for r in results if 50 <= r['manager'].get('trust_score', 0) < 75)
@@ -692,7 +682,6 @@ elif "CSV" in mode:
                         <div class="score-label">مرفوضة</div>
                     </div>""", unsafe_allow_html=True)
 
-                # ===== رسم بياني إجمالي =====
                 st.markdown('<p class="agents-title">التحليل البياني الإجمالي</p>', unsafe_allow_html=True)
 
                 col_pie, col_avg = st.columns(2, gap="large")
@@ -743,7 +732,6 @@ elif "CSV" in mode:
                     )
                     st.plotly_chart(fig_avg, use_container_width=True, config={'displayModeBar': False})
 
-                # ===== تحميل Excel =====
                 filename = export_to_excel(results)
                 with open(filename, 'rb') as f:
                     st.download_button(label="تحميل تقرير Excel", data=f.read(), file_name=filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
