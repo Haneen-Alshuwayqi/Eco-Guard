@@ -1,9 +1,9 @@
-import os
+Ôªøimport os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from agents import run_demographic_agent, run_financial_agent, run_manager_agent
 
-app = FastAPI(title="Eco-Guard API", description="‰Ÿ«„ «· Õﬁﬁ „‰ »Ì«‰«  «·„”ÊÕ«  «·√”—Ì…")
+app = FastAPI(title="Eco-Guard API", description="Household Survey Data Verification System")
 
 class SurveyRecord(BaseModel):
     age: int
@@ -46,3 +46,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
