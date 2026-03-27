@@ -1,4 +1,5 @@
 import os
+import json
 import anthropic
 from dotenv import load_dotenv
 
@@ -17,4 +18,10 @@ def call_llm(prompt: str) -> str:
         )
         return response.content[0].text
     except Exception as e:
-        return f\'{{"status": "ÎØÃ", "score": 0, "issues": ["ÎØÃ: {str(e)}"], "notes": "İÔá ÇáÇÊÕÇá"}}\'
+        error_response = {
+            "status": "Ø®Ø·Ø£",
+            "score": 0,
+            "issues": [str(e)],
+            "notes": "ÙØ´Ù„ Ø§Ù„Ø§ØªØµØ§Ù„"
+        }
+        return json.dumps(error_response, ensure_ascii=False)
