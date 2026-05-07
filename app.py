@@ -4,6 +4,7 @@ import time
 import base64
 import os
 import plotly.graph_objects as go
+import concurrent.futures
 from api_client import call_demographic_agent, call_financial_agent, call_manager_agent, analyze_record_parallel
 from utils import record_to_dict, get_trust_color, get_status_emoji, format_issues, csv_to_records, export_to_excel
 
@@ -441,7 +442,6 @@ if "يدوي" in mode:
                 st.markdown('<div class="step-indicator">جاري تشغيل الوكلاء بالتوازي — تحليل البيانات الديموغرافية والمالية في آنٍ واحد...</div>', unsafe_allow_html=True)
             progress_bar.progress(20)
 
-            # تشغيل الوكيلين الديموغرافي والمالي بالتوازي
             result = analyze_record_parallel(record)
             demo_result = result['demographic']
             financial_result = result['financial']
@@ -627,21 +627,35 @@ elif "CSV" in mode:
             st.info("جاري تحليل البيانات بالتوازي... يرجى الانتظار")
             try:
                 records = csv_to_records(df)
+                total_records = len(records)
                 progress_bar = st.progress(0)
-                results = []
-                for i, record in enumerate(records):
-                    result = analyze_record_parallel(record)
-                    results.append({
-                        'record_index': i+1,
-                        'original_record': record,
-                        'demographic': result['demographic'],
-                        'financial': result['financial'],
-                        'manager': result['manager']
-                    })
-                    progress_bar.progress((i+1) / len(records))
+                status_text = st.empty()
+                results = [None] * total_records
 
-                log_analysis(st.session_state.current_user, "batch", len(records))
+                BATCH_SIZE = 5
 
+                def process_record(args):
+                    idx, record = args
+                    return idx, analyze_record_parallel(record)
+
+                completed = 0
+                with concurrent.futures.ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
+                    futures = {executor.submit(process_record, (i, record)): i for i, record in enumerate(records)}
+                    for future in concurrent.futures.as_completed(futures):
+                        idx, result = future.result()
+                        results[idx] = {
+                            'record_index': idx + 1,
+                            'original_record': records[idx],
+                            'demographic': result['demographic'],
+                            'financial': result['financial'],
+                            'manager': result['manager']
+                        }
+                        completed += 1
+                        progress_bar.progress(completed / total_records)
+                        status_text.markdown(f'<div class="step-indicator">تم تحليل {completed} من {total_records} سجل...</div>', unsafe_allow_html=True)
+
+                status_text.empty()
+                log_analysis(st.session_state.current_user, "batch", len(results))
                 st.success(f"اكتمل تحليل {len(results)} سجل بنجاح")
 
                 total = len(results)
