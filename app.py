@@ -4,7 +4,7 @@ import time
 import base64
 import os
 import plotly.graph_objects as go
-from api_client import call_demographic_agent, call_financial_agent, call_manager_agent
+from api_client import call_demographic_agent, call_financial_agent, call_manager_agent, analyze_record_parallel
 from utils import record_to_dict, get_trust_color, get_status_emoji, format_issues, csv_to_records, export_to_excel
 
 st.set_page_config(
@@ -438,26 +438,17 @@ if "يدوي" in mode:
             status_container = st.empty()
 
             with status_container.container():
-                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...</div>', unsafe_allow_html=True)
+                st.markdown('<div class="step-indicator">جاري تشغيل الوكلاء بالتوازي — تحليل البيانات الديموغرافية والمالية في آنٍ واحد...</div>', unsafe_allow_html=True)
             progress_bar.progress(20)
 
-            demo_result = call_demographic_agent(record)
-            progress_bar.progress(40)
-            time.sleep(0.8)
+            # تشغيل الوكيلين الديموغرافي والمالي بالتوازي
+            result = analyze_record_parallel(record)
+            demo_result = result['demographic']
+            financial_result = result['financial']
+            manager_result = result['manager']
 
-            with status_container.container():
-                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...</div>', unsafe_allow_html=True)
-
-            financial_result = call_financial_agent(record)
-            progress_bar.progress(70)
-            time.sleep(0.8)
-
-            with status_container.container():
-                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
-
-            manager_result = call_manager_agent(record)
             progress_bar.progress(100)
-            time.sleep(0.5)
+            time.sleep(0.3)
             status_container.empty()
 
             log_analysis(st.session_state.current_user, "manual", 1)
@@ -633,16 +624,20 @@ elif "CSV" in mode:
         st.dataframe(df.head())
 
         if st.button("بدء التحليل الجماعي", type="primary", use_container_width=True):
-            st.info("جاري تحليل البيانات... يرجى الانتظار")
+            st.info("جاري تحليل البيانات بالتوازي... يرجى الانتظار")
             try:
                 records = csv_to_records(df)
                 progress_bar = st.progress(0)
                 results = []
                 for i, record in enumerate(records):
-                    demo = call_demographic_agent(record)
-                    financial = call_financial_agent(record)
-                    manager = call_manager_agent(record)
-                    results.append({'record_index': i+1, 'original_record': record, 'demographic': demo, 'financial': financial, 'manager': manager})
+                    result = analyze_record_parallel(record)
+                    results.append({
+                        'record_index': i+1,
+                        'original_record': record,
+                        'demographic': result['demographic'],
+                        'financial': result['financial'],
+                        'manager': result['manager']
+                    })
                     progress_bar.progress((i+1) / len(records))
 
                 log_analysis(st.session_state.current_user, "batch", len(records))
