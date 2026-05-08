@@ -439,14 +439,22 @@ if "يدوي" in mode:
             status_container = st.empty()
 
             with status_container.container():
-                st.markdown('<div class="step-indicator">جاري تشغيل الوكلاء بالتوازي — تحليل البيانات الديموغرافية والمالية في آنٍ واحد...</div>', unsafe_allow_html=True)
+                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...</div>', unsafe_allow_html=True)
             progress_bar.progress(20)
+
+            with status_container.container():
+                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...</div>', unsafe_allow_html=True)
+            progress_bar.progress(50)
 
             result = analyze_record_parallel(record)
             demo_result = result['demographic']
             financial_result = result['financial']
-            manager_result = result['manager']
 
+            with status_container.container():
+                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
+            progress_bar.progress(80)
+
+            manager_result = result['manager']
             progress_bar.progress(100)
             time.sleep(0.3)
             status_container.empty()
@@ -624,7 +632,7 @@ elif "CSV" in mode:
         st.dataframe(df.head())
 
         if st.button("بدء التحليل الجماعي", type="primary", use_container_width=True):
-            st.info("جاري تحليل البيانات بالتوازي... يرجى الانتظار")
+            st.info("جاري تحليل البيانات... يرجى الانتظار")
             try:
                 records = csv_to_records(df)
                 total_records = len(records)
@@ -652,7 +660,7 @@ elif "CSV" in mode:
                         }
                         completed += 1
                         progress_bar.progress(completed / total_records)
-                        status_text.markdown(f'<div class="step-indicator">تم تحليل {completed} من {total_records} سجل...</div>', unsafe_allow_html=True)
+                        status_text.markdown(f'<div class="step-indicator">جاري تشغيل الوكلاء الثلاثة — اكتمل تحليل {completed} من {total_records} سجل...</div>', unsafe_allow_html=True)
 
                 status_text.empty()
                 log_analysis(st.session_state.current_user, "batch", len(results))
