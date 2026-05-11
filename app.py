@@ -440,13 +440,13 @@ if "يدوي" in mode:
 
             # رسالة الوكيل الديموغرافي
             with status_container.container():
-                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...</div>', unsafe_allow_html=True)
+                st.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...</div>', unsafe_allow_html=True)
             progress_bar.progress(20)
             time.sleep(0.8)
 
             # رسالة الوكيل المالي
             with status_container.container():
-                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...</div>', unsafe_allow_html=True)
+                st.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...</div>', unsafe_allow_html=True)
             progress_bar.progress(50)
 
             # تشغيل الوكلاء بالتوازي
@@ -457,7 +457,7 @@ if "يدوي" in mode:
 
             # رسالة الوكيل القيادي
             with status_container.container():
-                st.markdown('<div class="step-indicator">جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
+                st.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
             time.sleep(0.5)
 
             manager_result = result['manager']
