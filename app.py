@@ -439,42 +439,20 @@ if "يدوي" in mode:
             progress_bar = st.progress(0)
             status_container = st.empty()
 
-            # رسائل الوكلاء المتبادلة
-            agent_messages = [
-                '⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...',
-                '⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...',
-            ]
-            stop_animation = threading.Event()
-            msg_index = [0]
-
-            def animate_messages():
-                while not stop_animation.is_set():
-                    with status_container.container():
-                        st.markdown(
-                            f'<div class="step-indicator">{agent_messages[msg_index[0] % 2]}</div>',
-                            unsafe_allow_html=True
-                        )
-                    msg_index[0] += 1
-                    stop_animation.wait(timeout=1.2)
-
             progress_bar.progress(20)
-            anim_thread = threading.Thread(target=animate_messages, daemon=True)
-            anim_thread.start()
+            with st.spinner("⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة..."):
+                time.sleep(0.5)
 
-            # تشغيل الوكلاء بالتوازي بينما الرسائل تتبادل
-            result = analyze_record_parallel(record)
+            progress_bar.progress(50)
+            with st.spinner("⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء..."):
+                result = analyze_record_parallel(record)
+
             demo_result = result['demographic']
             financial_result = result['financial']
-
-            # إيقاف الـ animation
-            stop_animation.set()
-            anim_thread.join(timeout=2)
             progress_bar.progress(80)
 
-            # رسالة الوكيل القيادي
-            with status_container.container():
-                st.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
-            time.sleep(0.5)
+            with st.spinner("⏳ جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية..."):
+                time.sleep(0.5)
 
             manager_result = result['manager']
             progress_bar.progress(100)
