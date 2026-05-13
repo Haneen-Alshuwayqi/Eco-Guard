@@ -5,6 +5,7 @@ import base64
 import os
 import plotly.graph_objects as go
 import concurrent.futures
+import threading
 from api_client import call_demographic_agent, call_financial_agent, call_manager_agent, analyze_record_parallel
 from utils import record_to_dict, get_trust_color, get_status_emoji, format_issues, csv_to_records, export_to_excel
 
@@ -438,21 +439,36 @@ if "يدوي" in mode:
             progress_bar = st.progress(0)
             status_container = st.empty()
 
-            # رسالة الوكيل الديموغرافي
-            with status_container.container():
-                st.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...</div>', unsafe_allow_html=True)
+            # رسائل الوكلاء المتبادلة
+            agent_messages = [
+                '⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...',
+                '⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...',
+            ]
+            stop_animation = threading.Event()
+            msg_index = [0]
+
+            def animate_messages():
+                while not stop_animation.is_set():
+                    with status_container.container():
+                        st.markdown(
+                            f'<div class="step-indicator">{agent_messages[msg_index[0] % 2]}</div>',
+                            unsafe_allow_html=True
+                        )
+                    msg_index[0] += 1
+                    stop_animation.wait(timeout=1.2)
+
             progress_bar.progress(20)
-            time.sleep(0.8)
+            anim_thread = threading.Thread(target=animate_messages, daemon=True)
+            anim_thread.start()
 
-            # رسالة الوكيل المالي
-            with status_container.container():
-                st.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...</div>', unsafe_allow_html=True)
-            progress_bar.progress(50)
-
-            # تشغيل الوكلاء بالتوازي
+            # تشغيل الوكلاء بالتوازي بينما الرسائل تتبادل
             result = analyze_record_parallel(record)
             demo_result = result['demographic']
             financial_result = result['financial']
+
+            # إيقاف الـ animation
+            stop_animation.set()
+            anim_thread.join(timeout=2)
             progress_bar.progress(80)
 
             # رسالة الوكيل القيادي
