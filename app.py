@@ -439,34 +439,34 @@ if "يدوي" in mode:
             progress_bar = st.progress(0)
             status_container = st.empty()
 
-            # تناوب رسائل الوكلاء قبل التحليل
-            messages = [
-                "⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...",
-                "⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...",
-                "⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...",
-                "⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...",
-            ]
-            for i, msg in enumerate(messages):
-                with status_container.container():
-                    st.markdown(f'<div class="step-indicator">{msg}</div>', unsafe_allow_html=True)
-                progress_bar.progress(20 + i * 8)
-                time.sleep(0.9)
-                st.rerun() if False else None
+            msg_placeholder = st.empty()
 
-            progress_bar.progress(50)
-            with st.spinner("⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء..."):
-                result = analyze_record_parallel(record)
+            # بدء التحليل في خلفية
+            import concurrent.futures as cf2
+            with cf2.ThreadPoolExecutor(max_workers=1) as ex:
+                future = ex.submit(analyze_record_parallel, record)
+
+                # رسائل متسلسلة بالتوازي مع التحليل
+                msg_placeholder.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...</div>', unsafe_allow_html=True)
+                progress_bar.progress(25)
+                time.sleep(1.8)
+
+                msg_placeholder.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...</div>', unsafe_allow_html=True)
+                progress_bar.progress(50)
+                time.sleep(1.8)
+
+                msg_placeholder.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
+                progress_bar.progress(75)
+
+                result = future.result()
 
             demo_result = result['demographic']
             financial_result = result['financial']
-            progress_bar.progress(80)
-
-            with st.spinner("⏳ جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية..."):
-                time.sleep(1.0)
-
             manager_result = result['manager']
+
             progress_bar.progress(100)
             time.sleep(0.3)
+            msg_placeholder.empty()
             status_container.empty()
 
             log_analysis(st.session_state.current_user, "manual", 1)
