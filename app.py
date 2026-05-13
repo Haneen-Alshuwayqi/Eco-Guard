@@ -457,7 +457,6 @@ if "يدوي" in mode:
 
                 msg_placeholder.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
                 progress_bar.progress(75)
-                time.sleep(4.0)
 
                 result = future.result()
 
