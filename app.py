@@ -449,14 +449,15 @@ if "يدوي" in mode:
                 # رسائل متسلسلة بالتوازي مع التحليل
                 msg_placeholder.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...</div>', unsafe_allow_html=True)
                 progress_bar.progress(25)
-                time.sleep(1.8)
+                time.sleep(2.0)
 
                 msg_placeholder.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...</div>', unsafe_allow_html=True)
                 progress_bar.progress(50)
-                time.sleep(1.8)
+                time.sleep(2.0)
 
                 msg_placeholder.markdown('<div class="step-indicator">⏳ جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية...</div>', unsafe_allow_html=True)
                 progress_bar.progress(75)
+                time.sleep(2.0)
 
                 result = future.result()
 
