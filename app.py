@@ -439,9 +439,19 @@ if "يدوي" in mode:
             progress_bar = st.progress(0)
             status_container = st.empty()
 
-            progress_bar.progress(20)
-            with st.spinner("⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة..."):
-                time.sleep(0.5)
+            # تناوب رسائل الوكلاء قبل التحليل
+            messages = [
+                "⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...",
+                "⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...",
+                "⏳ جاري تشغيل الوكيل الديموغرافي — تحليل بيانات الفرد والأسرة...",
+                "⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء...",
+            ]
+            for i, msg in enumerate(messages):
+                with status_container.container():
+                    st.markdown(f'<div class="step-indicator">{msg}</div>', unsafe_allow_html=True)
+                progress_bar.progress(20 + i * 8)
+                time.sleep(0.9)
+                st.rerun() if False else None
 
             progress_bar.progress(50)
             with st.spinner("⏳ جاري تشغيل الوكيل المالي — مقارنة البيانات مع مؤشرات هيئة الإحصاء..."):
@@ -452,7 +462,7 @@ if "يدوي" in mode:
             progress_bar.progress(80)
 
             with st.spinner("⏳ جاري تشغيل الوكيل القيادي — إصدار درجة الموثوقية النهائية..."):
-                time.sleep(0.5)
+                time.sleep(1.0)
 
             manager_result = result['manager']
             progress_bar.progress(100)
